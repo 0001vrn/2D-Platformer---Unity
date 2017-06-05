@@ -81,4 +81,25 @@ public class SimplePlatformController : MonoBehaviour {
 		theScale.x *= -1;
 		transform.localScale = theScale;
 	}
+
+	public void MoveLeft(){
+		rb2d.AddForce(Vector2.left * 1 * moveForce);
+		rb2d.velocity = new Vector2(-Mathf.Sign (rb2d.velocity.x) * maxSpeed, rb2d.velocity.y);
+	}
+
+	public void MoveRight(){
+		rb2d.AddForce(Vector2.right * 1 * moveForce);
+		rb2d.velocity = new Vector2(Mathf.Sign (rb2d.velocity.x) * maxSpeed, rb2d.velocity.y);
+	}
+
+	public void jumpClickDown(){
+		anim.SetTrigger("Jump");
+		rb2d.AddForce(new Vector2(0f, jumpForce));
+	}
+		
+
+
+	public void SetVelocityZero(){
+		rb2d.velocity = Vector2.zero;
+	}
 }
