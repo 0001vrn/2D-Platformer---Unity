@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityStandardAssets.CrossPlatformInput;
+
 
 public class SimplePlatformController : MonoBehaviour {
 
@@ -10,10 +12,23 @@ public class SimplePlatformController : MonoBehaviour {
 	public float jumpForce = 1000f;
 	public Transform groundCheck;
 
-
 	private bool grounded = false;
 	private Animator anim;
 	private Rigidbody2D rb2d;
+
+	/*For Swipe Detection and controls*/
+
+	public float maxTime=0.5f;
+	public float minSwipeDist = 400f;
+
+	float startTime;
+	float endTime;
+
+	Vector3 startPos;
+	Vector3 endPos;
+
+	float swipeDistance;
+	float swipeTime;
 
 
 	// Use this for initialization
@@ -26,19 +41,87 @@ public class SimplePlatformController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
 	{
+		swipeDetect ();
 		grounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
-
-		if (Input.GetButtonDown("Jump") && grounded)
-		{
-			jump = true;
-		}
 	}
 
+
+	void swipeDetect()
+	{
+		for(int i=0;i<Input.touchCount;i++) 
+		{
+			//Touch touch = Input.GetTouch (i);//if ith touch is Swipe
+			Touch touch = Input.GetTouch (i);
+			if (touch.phase == TouchPhase.Began) 
+			{
+				//Debug.Log ("Touch started");
+				startTime = Time.time;
+				startPos = touch.position;
+			}
+			else if(touch.phase == TouchPhase.Ended)
+			{
+				endTime = Time.time;
+				endPos = touch.position;
+				//Debug.Log ("Touch ended");
+				swipeDistance = (endPos - startPos).magnitude;
+				swipeTime = endTime - startTime;
+				//Debug.Log ("d: " + swipeDistance);
+				//Debug.Log ("t: " + swipeTime);
+				if (swipeTime < maxTime && swipeDistance < minSwipeDist) 
+				{
+					swipeUp ();
+				}
+
+			}
+
+
+		}
+
+	}
+	void swipeUp(){
+
+		Vector2 distance = endPos - startPos;
+		if (Mathf.Abs (distance.x) > Mathf.Abs (distance.y)) 
+		{
+			Debug.Log ("Horizontal Swipe");
+
+			if (distance.x > 0) 
+			{
+				Debug.Log ("Right Swipe");
+			}
+			if (distance.x < 0) 
+			{
+				Debug.Log ("Left Swipe");
+			}
+
+
+		}
+		else if(Mathf.Abs (distance.x) < Mathf.Abs (distance.y))
+		{
+			if(grounded)
+				jump = true;
+			Debug.Log ("Vertical Swipe");
+			if (distance.x > 0) 
+			{
+				Debug.Log ("Right Swipe");
+			}
+			if (distance.x < 0) 
+			{
+				Debug.Log ("Left Swipe");
+			}
+		}
+
+
+	}
 	void FixedUpdate()
 	{
-		float h = Input.GetAxis("Horizontal");
 
-		anim.SetFloat("Speed", Mathf.Abs(h));
+
+		float h = CrossPlatformInputManager.GetAxis("HorizontalM");
+
+		//Debug.Log (h);
+		anim.SetFloat ("Speed", Mathf.Abs (h));
+
 
 		if (h * rb2d.velocity.x < maxSpeed)
 			rb2d.AddForce(Vector2.right * h * moveForce);
@@ -59,18 +142,6 @@ public class SimplePlatformController : MonoBehaviour {
 		}
 
 
-
-		/*
-		rb2d.velocity = new Vector2(Mathf.Sign (rb2d.velocity.x) * maxSpeed, rb2d.velocity.y);
-
-		if (jump)
-		{
-			anim.SetTrigger("Jump");
-			rb2d.AddForce(new Vector2(0f, jumpForce));
-			jump = false;
-		}
-
-		*/
 	}
 
 
@@ -82,24 +153,4 @@ public class SimplePlatformController : MonoBehaviour {
 		transform.localScale = theScale;
 	}
 
-	public void MoveLeft(){
-		rb2d.AddForce(Vector2.left * 1 * moveForce);
-		rb2d.velocity = new Vector2(-Mathf.Sign (rb2d.velocity.x) * maxSpeed, rb2d.velocity.y);
-	}
-
-	public void MoveRight(){
-		rb2d.AddForce(Vector2.right * 1 * moveForce);
-		rb2d.velocity = new Vector2(Mathf.Sign (rb2d.velocity.x) * maxSpeed, rb2d.velocity.y);
-	}
-
-	public void jumpClickDown(){
-		anim.SetTrigger("Jump");
-		rb2d.AddForce(new Vector2(0f, jumpForce));
-	}
-		
-
-
-	public void SetVelocityZero(){
-		rb2d.velocity = Vector2.zero;
-	}
 }
